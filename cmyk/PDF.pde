@@ -1,7 +1,9 @@
 /*
-  Updated for Processing 3.3
-  Copied all of Andreas's CMYK methods into current PGraphicsPDF
-  acd 2018
+  Updated for Processing 4.0 beta 7
+  Copied all of CMYK methods into current PGraphicsPDF
+  Copyright (c) 2013 Andreas Gysin   https://github.com/ertdfgcvb
+  Copyright (c) 2018 acdean          https://github.com/acdean
+  Copyright (c) 2022 Christoph Haag  http://gitlab.com/chch
 
   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -16,7 +18,8 @@
 
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2005-11 Ben Fry and Casey Reas
+  Copyright (c) 2005-12 Ben Fry and Casey Reas
+  Copyright (c) 2012-18 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -41,6 +44,7 @@ import java.util.*;
 
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
+import com.lowagie.text.pdf.ByteBuffer;
 
 import processing.awt.PGraphicsJava2D;
 import processing.core.*;
@@ -289,6 +293,9 @@ public class PDF extends PGraphicsJava2D {
 //    long t0 = System.currentTimeMillis();
 
     if (document == null) {
+      // https://github.com/processing/processing/issues/5801#issuecomment-466632459
+      ByteBuffer.HIGH_PRECISION = true;
+
       document = new Document(new Rectangle(width, height));
       boolean missingPath = false;
       try {
@@ -341,7 +348,7 @@ public class PDF extends PGraphicsJava2D {
 //      long t = System.currentTimeMillis();
       mapper = new DefaultFontMapper();
 
-      if (PApplet.platform == PConstants.MACOSX) {
+      if (PApplet.platform == PConstants.MACOS) {
         try {
           String homeLibraryFonts =
             System.getProperty("user.home") + "/Library/Fonts";
@@ -592,7 +599,7 @@ public class PDF extends PGraphicsJava2D {
     scale((x2 - x1) / imageWidth,
           (y2 - y1) / imageHeight);
     if (u2-u1 == imageWidth && v2-v1 == imageHeight) {
-      g2.drawImage(image.getImage(), 0, 0, null);
+      g2.drawImage((Image) image.getNative(), 0, 0, null);
     } else {
       PImage tmp = image.get(u1, v1, u2-u1, v2-v1);
       g2.drawImage((Image) tmp.getNative(), 0, 0, null);
@@ -715,6 +722,14 @@ public class PDF extends PGraphicsJava2D {
 
   public void filter(int kind, float param) {
     nope("filter");
+  }
+
+  //
+
+  protected void blendModeImpl() {
+    if (blendMode != REPLACE && blendMode != BLEND) {
+      showMissingWarning("blendMode");
+    }
   }
 
   //
